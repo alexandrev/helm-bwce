@@ -8,6 +8,9 @@ metadata:
 {{- end }}
   labels:
     chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    app: {{ template "fullname" . }}
+    app.kubernetes.io/name: {{ template "fullname" . }}
+    mainProcess: ${BW_MAIN_PROCESS}
 {{- if .Values.service.annotations }}
   annotations:
 {{ toYaml .Values.service.annotations | indent 4 }}
@@ -15,8 +18,8 @@ metadata:
 spec:
   type: {{ .Values.service.type }}
   ports:
-  - port: {{ .Values.service.externalPort }}
-    targetPort: {{ .Values.service.internalPort }}
+  - port: {{ .Values.service.port }}
+    targetPort: {{ .Values.service.port }}
     protocol: TCP
     name: http
 {{- if .Values.bwce.monitoring.enabled }}

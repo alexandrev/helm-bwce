@@ -22,5 +22,5 @@ spec:
 {{- else }}
         name: {{ template "fullname" . }}
 {{- end }}
-        port: {{ .Values.service.externalPort}}              
+        port: {{ .Values.service.port}}              
 {{- end }}

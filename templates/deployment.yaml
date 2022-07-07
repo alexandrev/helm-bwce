@@ -3,50 +3,33 @@ kind: Deployment
 metadata:
   name: {{ template "fullname" . }}
   labels:
-    meta.helm.sh/chart:  "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    meta.helm.sh/chart:  "{{ .Chart.Name }}-{{ .Chart.Version }}"
     meta.helm.sh/release-name: {{ .Release.Name }}
     app : {{ template "fullname" . }}
     app.kubernetes.io/name: {{ template "fullname" . }}
-    app.kubernetes.io/component: "app"
-    app.kubernetes.io/part-of: {{ template "fullname" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: "Helm"
-    app.kubernetes.io/version: {{ .Chart.AppVersion }}
-    tibco.com/technology: "bwce"
-    tibco.com/group: "core"
-    tibco.com/phase: "test"    
-    tibco.com/version: {{ .Values.image.tag }}          
+    tibco.com/technology: "bwce"       
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.replicas }}
   selector:
     matchLabels:
       app: {{ template "fullname" . }}
   template:
     metadata:
       labels:
-        helm.sh/chart:  "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+        helm.sh/chart:  "{{ .Chart.Name }}"
         app : {{ template "fullname" . }}
         app.kubernetes.io/name: {{ template "fullname" . }}
-        app.kubernetes.io/component: "app"
-        app.kubernetes.io/part-of: {{ template "fullname" . }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        app.kubernetes.io/managed-by: "helm"
-        app.kubernetes.io/version: {{ .Chart.AppVersion }}
         tibco.com/technology: "bwce"
-        tibco.com/group: "core"
-        tibco.com/phase: "test"          
-        tibco.com/version: {{ .Values.image.tag }}        
 {{- if .Values.podAnnotations }}
       annotations:
 {{ toYaml .Values.podAnnotations | indent 8 }}
 {{- end }}
-
     spec:
       imagePullSecrets:
       - name: {{ .Values.image.imagePullSecrets }}
       containers:
       - name: {{ .Chart.Name }}
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        image: "{{ .Values.image.imageName }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
 {{- if .Values.bwce.configmap.enabled }}
         envFrom:
@@ -58,27 +41,30 @@ spec:
         - name: {{ $pkey }}
           value: {{ quote $pval }}
 {{- end }}
+{{- end }}
         - name: BW_LOGLEVEL
-          value: {{ .Values.bwce.loglevel }}
+          value: {{ .Values.bwce.log.level }}
         - name: BW_PROFILE
           value: {{ .Values.bwce.bwprofile | quote }}
         - name: APP_CONFIG_PROFILE
           value: {{ .Values.bwce.configprofile | quote }}
+
 {{- if .Values.bwce.monitoring.enabled }}
         - name: BW_PROMETHEUS_ENABLE
           value: "TRUE"
 {{- end }}
+
 {{- if .Values.bwce.opentracing.enabled }}
         - name: BW_JAVA_OPTS
-          value: {{printf "%s %s"  .Values.bwce.javaopts .Values.bwce.opentracing.javaopts }}
+          value: "{{printf "%s %s"  .Values.bwce.jvm.javaopts .Values.bwce.opentracing.javaopts }}"
 {{- else}}
         - name: BW_JAVA_OPTS
-          value: {{ .Values.bwce.javaopts | quote }}
+          value: "{{ .Values.bwce.jvm.javaopts}}"
 {{- end }}
-{{- if .Values.bwce.javagc.enabled }}
         - name: BW_JAVA_GC_OPTS
-          value: {{ .Values.bwce.javagc.javagcopts | quote }}
-{{- end }}
+          value: {{ .Values.bwce.jvm.javagcopts | quote }}
+        - name: BW_LOG_FORMAT
+          value:  {{ .Values.bwce.log.format | quote }}
 {{- if .Values.bwce.opentracing.enabled }}        
         - name: JAEGER_SERVICE_NAME
           value: {{ .Chart.Name }}
@@ -92,7 +78,7 @@ spec:
           value: "6831"
 {{- end }}
         ports:
-        - containerPort: {{ .Values.service.internalPort }}
+        - containerPort: {{ .Values.service.port }}
         livenessProbe:
           httpGet:
             path: {{ .Values.probePath.httpGet }}
@@ -112,4 +98,4 @@ spec:
         resources:
 {{ toYaml .Values.resources | indent 12 }}
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
-{{- end }}
+

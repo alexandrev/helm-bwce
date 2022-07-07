@@ -1,6 +1,6 @@
 name: bwce
 description: Helm Chart to Deploy a TIBCO BusinessWorks Container Edition Application
 apiVersion: v1
-version: 0.1.0-SNAPSHOT
+version: 0.2.0
 icon: 
-appVersion: 0.1.0
+appVersion: 2.7.2

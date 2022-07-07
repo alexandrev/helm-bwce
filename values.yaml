@@ -1,12 +1,10 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
-replicaCount: 1
-image:
-  repository: 552846087011.dkr.ecr.eu-west-2.amazonaws.com/tibco/bwce
-  tag: 2.5.2
+replicas: 1
+image: 
+  imageName: 552846087011.dkr.ecr.eu-west-2.amazonaws.com/tibco/bwce:2.5.2
   pullPolicy: Always
   imagePullSecrets: regcred
-
 # define environment variables here as a map of key: value
 env:
 
@@ -17,8 +15,8 @@ istio:
 service:
   name: bwce
   type: ClusterIP
-  externalPort: 8080
-  internalPort: 8080
+  port: 8080
+  mainProcess: Main
   annotations:
 resources:
   limits:
@@ -40,15 +38,17 @@ readinessProbe:
   periodSeconds: 20
   successThreshold: 1
   timeoutSeconds: 1
+
 bwce:
   configmap:
     enabled: false
     name: bwce-configmap
 # if configmap false
-  loglevel: ERROR
-  javaopts: "-Dbw.monitor.batchsize=1 -Dbw.monitor.publishtimer=1500"
-  javagc: 
-    enabled: true
+  log:
+    level: ERROR
+    format: "JSON"
+  jvm:
+    javaopts: "-Dsun.net.http.allowRestrictedHeaders=true -Dbw.engine.enable.memory.saving.mode=true"
     javagcopts: "-XX:+UseShenandoahGC -XX:+UnlockExperimentalVMOptions -XX:ShenandoahUncommitDelay=1000 -XX:ShenandoahGuaranteedGCInterval=5000"
   bwprofile: "default"
   configprofile: "docker"

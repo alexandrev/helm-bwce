@@ -1,0 +1,21 @@
+{{- if .Values.bwce.monitoring.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name:  bw-{{ template "fullname" . }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ template "fullname" . }}
+  endpoints:
+  - metricRelabelings:
+      - action: replace
+        regex: (.*)
+        replacement: '.*$1.*'
+        sourceLabels:
+          - mainProcess
+        targetLabel: mainProcess
+    port: prom
+  targetLabels:
+  - mainProcess
+{{- end }}
