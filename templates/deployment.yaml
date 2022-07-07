@@ -1,0 +1,115 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "fullname" . }}
+  labels:
+    meta.helm.sh/chart:  "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    meta.helm.sh/release-name: {{ .Release.Name }}
+    app : {{ template "fullname" . }}
+    app.kubernetes.io/name: {{ template "fullname" . }}
+    app.kubernetes.io/component: "app"
+    app.kubernetes.io/part-of: {{ template "fullname" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    tibco.com/technology: "bwce"
+    tibco.com/group: "core"
+    tibco.com/phase: "test"    
+    tibco.com/version: {{ .Values.image.tag }}          
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "fullname" . }}
+  template:
+    metadata:
+      labels:
+        helm.sh/chart:  "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+        app : {{ template "fullname" . }}
+        app.kubernetes.io/name: {{ template "fullname" . }}
+        app.kubernetes.io/component: "app"
+        app.kubernetes.io/part-of: {{ template "fullname" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/managed-by: "helm"
+        app.kubernetes.io/version: {{ .Chart.AppVersion }}
+        tibco.com/technology: "bwce"
+        tibco.com/group: "core"
+        tibco.com/phase: "test"          
+        tibco.com/version: {{ .Values.image.tag }}        
+{{- if .Values.podAnnotations }}
+      annotations:
+{{ toYaml .Values.podAnnotations | indent 8 }}
+{{- end }}
+
+    spec:
+      imagePullSecrets:
+      - name: {{ .Values.image.imagePullSecrets }}
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+{{- if .Values.bwce.configmap.enabled }}
+        envFrom:
+        - configMapRef:
+            name: {{ .Values.bwce.configmap.name }}
+{{- else }}
+        env:
+{{- range $pkey, $pval := .Values.env }}
+        - name: {{ $pkey }}
+          value: {{ quote $pval }}
+{{- end }}
+        - name: BW_LOGLEVEL
+          value: {{ .Values.bwce.loglevel }}
+        - name: BW_PROFILE
+          value: {{ .Values.bwce.bwprofile | quote }}
+        - name: APP_CONFIG_PROFILE
+          value: {{ .Values.bwce.configprofile | quote }}
+{{- if .Values.bwce.monitoring.enabled }}
+        - name: BW_PROMETHEUS_ENABLE
+          value: "TRUE"
+{{- end }}
+{{- if .Values.bwce.opentracing.enabled }}
+        - name: BW_JAVA_OPTS
+          value: {{printf "%s %s"  .Values.bwce.javaopts .Values.bwce.opentracing.javaopts }}
+{{- else}}
+        - name: BW_JAVA_OPTS
+          value: {{ .Values.bwce.javaopts | quote }}
+{{- end }}
+{{- if .Values.bwce.javagc.enabled }}
+        - name: BW_JAVA_GC_OPTS
+          value: {{ .Values.bwce.javagc.javagcopts | quote }}
+{{- end }}
+{{- if .Values.bwce.opentracing.enabled }}        
+        - name: JAEGER_SERVICE_NAME
+          value: {{ .Chart.Name }}
+        - name: JAEGER_AGENT_HOST   # NOTE: Point to the Agent daemon on the Node
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: JAEGER_SAMPLER_MANAGER_HOST_PORT
+          value: $(JAEGER_AGENT_HOST):5778
+        - name: JAEGER_AGENT_PORT
+          value: "6831"
+{{- end }}
+        ports:
+        - containerPort: {{ .Values.service.internalPort }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.probePath.httpGet }}
+            port: {{ .Values.probePath.port }}
+          initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+          successThreshold: {{ .Values.livenessProbe.successThreshold }}
+          timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.probePath.httpGet }}
+            port: {{ .Values.probePath.port }}
+          initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+          successThreshold: {{ .Values.readinessProbe.successThreshold }}
+          timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+        resources:
+{{ toYaml .Values.resources | indent 12 }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+{{- end }}
