@@ -10,7 +10,9 @@ metadata:
     chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
     app: {{ template "fullname" . }}
     app.kubernetes.io/name: {{ template "fullname" . }}
-    mainProcess: ${BW_MAIN_PROCESS}
+    {{- if .Values.bwce.monitoring.enabled }}
+    mainProcess: {{ .Values.bwce.monitoring.mainProcess}}
+    {{- end }}
 {{- if .Values.service.annotations }}
   annotations:
 {{ toYaml .Values.service.annotations | indent 4 }}

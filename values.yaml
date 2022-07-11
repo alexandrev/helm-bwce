@@ -54,6 +54,7 @@ bwce:
   configprofile: "docker"
   monitoring:
     enabled: true    
+    mainProcess: mainProcess
   opentracing:
     enabled: true
     javaopts: "-Dbw.engine.opentracing.enable=true"
