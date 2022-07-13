@@ -2,7 +2,9 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name:  bw-{{ template "fullname" . }}
+  name:  {{ template "fullname" . }}
+  labels:
+    {{ toYaml .Values.bwce.monitoring.labels | indent 4 }} 
 spec:
   selector:
     matchLabels:

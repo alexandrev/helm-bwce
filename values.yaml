@@ -5,6 +5,12 @@ image:
   imageName: 552846087011.dkr.ecr.eu-west-2.amazonaws.com/tibco/bwce:2.5.2
   pullPolicy: Always
   imagePullSecrets: regcred
+
+
+labels: {}
+
+annotations: {}
+
 # define environment variables here as a map of key: value
 env:
 
@@ -12,8 +18,14 @@ env:
 istio: 
   enable: true
 
+hpa:
+  enabled: true
+  minReplica: 1
+  maxReplica: 1
+  targetAverageUtilization: 80
+
 service:
-  name: bwce
+  enabled: true
   type: ClusterIP
   port: 8080
   mainProcess: Main
@@ -50,11 +62,12 @@ bwce:
   jvm:
     javaopts: "-Dsun.net.http.allowRestrictedHeaders=true -Dbw.engine.enable.memory.saving.mode=true"
     javagcopts: "-XX:+UseShenandoahGC -XX:+UnlockExperimentalVMOptions -XX:ShenandoahUncommitDelay=1000 -XX:ShenandoahGuaranteedGCInterval=5000"
-  bwprofile: "default"
+  bwprofile: "Docker"
   configprofile: "docker"
   monitoring:
     enabled: true    
     mainProcess: mainProcess
+    labels: {}
   opentracing:
     enabled: true
     javaopts: "-Dbw.engine.opentracing.enable=true"

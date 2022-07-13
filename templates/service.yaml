@@ -1,3 +1,5 @@
+
+{{- if or (eq .Values.service.enabled true) (eq  .Values.bwce.monitoring.enabled true) }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -8,8 +10,9 @@ metadata:
 {{- end }}
   labels:
     chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
-    app: {{ template "fullname" . }}
     app.kubernetes.io/name: {{ template "fullname" . }}
+    meta.helm.sh/chart:  "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    app.kubernetes.io/instance: {{ .Release.Name }}
     {{- if .Values.bwce.monitoring.enabled }}
     mainProcess: {{ .Values.bwce.monitoring.mainProcess}}
     {{- end }}
@@ -20,10 +23,12 @@ metadata:
 spec:
   type: {{ .Values.service.type }}
   ports:
+{{- if .Values.service.enabled }}
   - port: {{ .Values.service.port }}
     targetPort: {{ .Values.service.port }}
     protocol: TCP
     name: http
+{{- end }}
 {{- if .Values.bwce.monitoring.enabled }}
   - port: 9095
     targetPort: 9095
@@ -32,3 +37,4 @@ spec:
 {{- end }}
   selector:
     app.kubernetes.io/name: {{ template "fullname" . }}
+{{- end }}

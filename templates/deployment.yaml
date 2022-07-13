@@ -3,16 +3,20 @@ kind: Deployment
 metadata:
   name: {{ template "fullname" . }}
   labels:
-    meta.helm.sh/chart:  "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    meta.helm.sh/release-name: {{ .Release.Name }}
-    app : {{ template "fullname" . }}
+    meta.helm.sh/chart:  "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/name: {{ template "fullname" . }}
     tibco.com/technology: "bwce"       
+    {{- with .Values.labels }}
+      {{- range $key, $value := . }}
+      {{ $key }}: {{ $value | quote }}
+      {{- end }}
+    {{- end }}
 spec:
   replicas: {{ .Values.replicas }}
   selector:
     matchLabels:
-      app: {{ template "fullname" . }}
+      app.kubernetes.io/name: {{ template "fullname" . }}
   template:
     metadata:
       labels:
@@ -20,9 +24,14 @@ spec:
         app : {{ template "fullname" . }}
         app.kubernetes.io/name: {{ template "fullname" . }}
         tibco.com/technology: "bwce"
-{{- if .Values.podAnnotations }}
+      {{- with .Values.labels }}
+        {{- range $key, $value := . }}
+        {{ $key }}: {{ $value | quote }}
+        {{- end }}
+      {{- end }}
+{{- if .Values.annotations }}
       annotations:
-{{ toYaml .Values.podAnnotations | indent 8 }}
+{{ toYaml .Values.annotations | indent 8 }}
 {{- end }}
     spec:
       imagePullSecrets:
@@ -99,4 +108,22 @@ spec:
         resources:
 {{ toYaml .Values.resources | indent 12 }}
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
-
+{{- if .Values.hpa.enabled }}
+---
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ template "fullname" . }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name:  {{ template "fullname" . }}
+  minReplicas: {{ .Values.hpa.minReplica }}
+  maxReplicas: {{ .Values.hpa.maxReplica }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      targetAverageUtilization: {{ .Values.hpa.targetAverageUtilization }}
+{{- end }}
