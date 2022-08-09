@@ -66,7 +66,7 @@ bwce:
   configprofile: "docker"
   monitoring:
     enabled: true    
-    mainProcess: mainProcess
+    mainProcess: public
     labels: {}
   opentracing:
     enabled: true
