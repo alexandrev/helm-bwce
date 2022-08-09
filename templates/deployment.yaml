@@ -19,6 +19,8 @@ spec:
       app.kubernetes.io/name: {{ template "fullname" . }}
   template:
     metadata:
+      annotations:
+        rollme: {{ randAlphaNum 5 | quote }}
       labels:
         helm.sh/chart:  "{{ .Chart.Name }}"
         app : {{ template "fullname" . }}
