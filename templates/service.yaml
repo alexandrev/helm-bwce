@@ -9,7 +9,6 @@ metadata:
   name: {{ template "fullname" . }}
 {{- end }}
   labels:
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
     app.kubernetes.io/name: {{ template "fullname" . }}
     meta.helm.sh/chart:  "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
     app.kubernetes.io/instance: {{ .Release.Name }}

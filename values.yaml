@@ -14,6 +14,37 @@ annotations: {}
 # define environment variables here as a map of key: value
 env:
 
+
+hashicorp:
+  inject:
+    enabled: true
+    role: internal-app
+    secrets:
+    - name: internal/data/database/config
+      path: secret-database-config.txt
+      template: |
+          {{- with secret "internal/data/database/config" -}}
+          postgresql://{{ .Data.data.username }}:{{ .Data.data.password }}@postgres:5432/wizard
+          {{- end -}}
+
+  enabled: true
+  url: http://vault:8200
+  path: /secret/test
+  auth: 
+    type: token
+    path: 
+    token: hvs.cvH5Coqh3QiWzD5rMzdbOiPu
+    roleId : 
+    secretId: 
+    username: 
+    password: 
+    cacert: 
+  namespace: 
+  kv:
+    version: 2
+
+serviceAccountName: internal-app
+
 # enable this flag to use knative serve to deploy the app
 istio: 
   enable: true
@@ -54,6 +85,8 @@ readinessProbe:
 bwce:
   configmap:
     enabled: false
+    internal: true 
+    properties:  aaa
     name: bwce-configmap
 # if configmap false
   log:

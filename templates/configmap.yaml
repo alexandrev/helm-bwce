@@ -1,0 +1,18 @@
+{{- if .Values.bwce.configmap.enabled }}
+{{- if .Values.bwce.configmap.internal }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+{{- if .Values.bwce.configmap.name }}
+  name: {{ .Values.bwce.configmap.name }}
+{{- else }}
+  name: {{ .Release.Name }}-config
+{{- end }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    meta.helm.sh/chart:  "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data: 
+{{ ( $.Files.Glob  $.Values.bwce.configmap.properties ).AsConfig | indent 2 }} 
+{{- end }}
+{{- end }}

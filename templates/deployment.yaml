@@ -21,6 +21,20 @@ spec:
     metadata:
       annotations:
         rollme: {{ randAlphaNum 5 | quote }}
+{{- if .Values.hashicorp.enabled }}
+  {{- if .Values.hashicorp.inject.enabled }}
+        vault.hashicorp.com/agent-inject: 'true'
+        vault.hashicorp.com/role: {{ .Values.hashicorp.inject.role }}
+       {{- range .Values.hashicorp.inject.secrets}}
+        vault.hashicorp.com/agent-inject-secret-{{ .path }}: {{ .name }}
+       {{- if .template }}
+        vault.hashicorp.com/agent-inject-template-{{ .path }}: {{ toYaml .template | indent 10}}
+       {{- end }}
+       {{- end }}
+
+
+  {{- end }}
+{{- end }}
       labels:
         helm.sh/chart:  "{{ .Chart.Name }}"
         app : {{ template "fullname" . }}
@@ -38,6 +52,9 @@ spec:
     spec:
       imagePullSecrets:
       - name: {{ .Values.image.imagePullSecrets }}
+{{- if .Values.serviceAccountName }}
+      serviceAccountName: {{ .Values.serviceAccountName  }}
+{{- end }}
       containers:
       - name: {{ .Chart.Name }}
         image: "{{ .Values.image.imageName }}"
@@ -45,7 +62,11 @@ spec:
 {{- if .Values.bwce.configmap.enabled }}
         envFrom:
         - configMapRef:
+        {{- if .Values.bwce.configmap.name }}
             name: {{ .Values.bwce.configmap.name }}
+        {{- else }}
+            name: {{ .Release.Name }}-config
+        {{- end }}
         env:
 {{- else }}
         env:
@@ -53,6 +74,57 @@ spec:
         - name: {{ $pkey }}
           value: {{ quote $pval }}
 {{- end }}
+{{- end }}
+
+{{- if .Values.hashicorp.enabled }}
+
+        - name: HASHICORP_VAULT_ADDR
+          value: {{ .Values.hashicorp.url }}
+        - name: HASHICORP_VAULT_AUTH
+          value: {{ .Values.hashicorp.auth.type }}
+        - name: VAULT_AUTH_PATH
+          value: {{ .Values.hashicorp.path }}
+{{- if  .Values.hashicorp.kv.version}}
+        - name: HASHICORP_VAULT_KV_VERSION
+          value: {{ .Values.hashicorp.kv.version | quote }}
+{{- end }}
+
+{{- if  .Values.hashicorp.namespace}}
+        - name: HASHICORP_VAULT_NAMESPACE
+          value: {{ .Values.hashicorp.namespace }}
+{{- end }}
+
+{{- if  .Values.hashicorp.auth.path}}
+        - name: HASHICORP_AUTH_PATH
+          value: {{ .Values.hashicorp.auth.path}}
+{{- end }}
+
+{{- if  .Values.hashicorp.cacert}}
+        - name: HASHICORP_CACERT
+          value: {{ .Values.hashicorp.cacert }}
+{{- end }}
+
+
+{{- if eq "token" .Values.hashicorp.auth.type }}
+        - name: HASHICORP_VAULT_TOKEN
+          value: {{ .Values.hashicorp.auth.token }}
+{{- end }}
+
+{{- if eq "approle" .Values.hashicorp.auth.type }}
+        - name: HASHICORP_VAULT_ROLE_ID
+          value: {{ .Values.hashicorp.auth.roleId }}
+        - name: HASHICORP_VAULT_SECRET_ID
+          value: {{ .Values.hashicorp.auth.secretId }}
+{{- end }}
+
+{{- if eq "userpass" .Values.hashicorp.auth.type }}
+
+        - name: HASHICORP_VAULT_USERNAME
+          value: {{ .Values.hashicorp.auth.username}}
+        - name: HASHICORP_VAULT_PASSWORD
+          value: {{ .Values.hashicorp.auth.password}}
+{{- end }}
+
 {{- end }}
         - name: BW_LOGLEVEL
           value: {{ .Values.bwce.log.level }}
