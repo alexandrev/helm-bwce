@@ -50,6 +50,9 @@ spec:
 {{ toYaml .Values.annotations | indent 8 }}
 {{- end }}
     spec:
+      securityContext: 
+        runAsUser: {{ $.Values.securityContext.runAsUser }}
+        fsGroup: {{ $.Values.securityContext.fsGroup }}
       imagePullSecrets:
       - name: {{ .Values.image.imagePullSecrets }}
 {{- if .Values.serviceAccountName }}
@@ -179,6 +182,8 @@ spec:
           periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
           successThreshold: {{ .Values.readinessProbe.successThreshold }}
           timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+        securityContext: 
+          runAsUser: {{ $.Values.securityContext.runAsUser }}
         resources:
 {{ toYaml .Values.resources | indent 12 }}
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}

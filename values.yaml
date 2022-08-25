@@ -1,5 +1,10 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
+
+global:
+  uid: 2001
+  fsGroup: 2001
+
 replicas: 1
 image: 
   imageName: 552846087011.dkr.ecr.eu-west-2.amazonaws.com/tibco/bwce:2.5.2
