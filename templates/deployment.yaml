@@ -139,6 +139,8 @@ spec:
 {{- if .Values.bwce.monitoring.enabled }}
         - name: BW_PROMETHEUS_ENABLE
           value: "TRUE"
+        - name: BW_PROMETHEUS_DETAILS_ENABLE
+          value: "FALSE"
 {{- end }}
 
 {{- if .Values.bwce.opentracing.enabled }}
