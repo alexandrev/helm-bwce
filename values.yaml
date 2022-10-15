@@ -1,8 +1,8 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-global:
-  uid: 2001
+securityContext:
+  runAsUser: 2001
   fsGroup: 2001
 
 replicas: 1
@@ -19,10 +19,11 @@ annotations: {}
 # define environment variables here as a map of key: value
 env:
 
+serviceAccountName: default
 
 hashicorp:
   inject:
-    enabled: true
+    enabled: false
     role: internal-app
     secrets:
     - name: internal/data/database/config
@@ -98,14 +99,15 @@ bwce:
     level: ERROR
     format: "JSON"
   jvm:
-    javaopts: "-Dsun.net.http.allowRestrictedHeaders=true -Dbw.engine.enable.memory.saving.mode=true"
+    javaopts: "-Dsun.net.http.allowRestrictedHeaders=true -Dbw.engine.enable.memory.saving.mode=true -Dbw.engine.enable.audit.events=true"
     javagcopts: "-XX:+UseShenandoahGC -XX:+UnlockExperimentalVMOptions -XX:ShenandoahUncommitDelay=1000 -XX:ShenandoahGuaranteedGCInterval=5000"
   bwprofile: "Docker"
   configprofile: "docker"
   monitoring:
     enabled: true    
     mainProcess: public
-    labels: {}
+    labels: 
+    release: "prometheus" 
   opentracing:
     enabled: true
     javaopts: "-Dbw.engine.opentracing.enable=true"
